@@ -1,14 +1,22 @@
 import React from "react";
 import "./App.scss";
-import { useStete } from "react";
+import { useState } from "react";
 
 function App() {
-    const [brkLength, setBrkLength] = useStete("5");
-    const [seshLength, setSeshLength] = useStete("25");
-    const [timerState, setTimerState] = useStete("stopped");
-    const [timerType, setTimerType] = useStete("Session");
-    const [timer, setTimer] = useStete(1500);
-    const [intervalID, setIntervalID] = useStete("");
+    const [brkLength, setBrkLength] = useState(5);
+    const [seshLength, setSeshLength] = useState(25);
+    const [timerState, setTimerState] = useState("stopped");
+    const [timerType, setTimerType] = useState("Session");
+    const [timer, setTimer] = useState(1500);
+    const [intervalID, setIntervalID] = useState("");
+
+    const timeCnv = (sec) => {
+        let minutes = Math.floor(sec / 60);
+        let seconds = sec % 60;
+        let minutesStr = minutes < 10 ? `0${minutes}` : `${minutes}`;
+        let secondsStr = seconds < 10 ? `0${seconds}` : `${seconds}`;
+        return `${minutesStr}:${secondsStr}`;
+    };
     return (
         <div className="App">
             <div className="app-container">
@@ -21,7 +29,7 @@ function App() {
                         addID="break-increment"
                         lengthID="break-length"
                         length={brkLength}
-                        onClick=""
+                        onClick={() => 1}
                     />
                     <TimeControl
                         titleID="session-label"
@@ -30,21 +38,21 @@ function App() {
                         addID="session-increment"
                         lengthID="session-length"
                         length={seshLength}
-                        onClick=""
+                        onClick={() => 1}
                     />
                 </div>
                 <div className="timer">
                     <div className="timer-wrapper">
-                        <div id="timer-label">{"timerType"}</div>
-                        <div id="time-left">{"10:00"}</div>
+                        <div id="timer-label">{timerType}</div>
+                        <div id="time-left">{timeCnv(timer)}</div>
                     </div>
                 </div>
                 <div className="timer-control">
-                    <button id="start_stop" onClick={"timerControl"}>
+                    <button id="start_stop" onClick={() => 1}>
                         <i class="fa fa-play-circle-o" aria-hidden="true"></i>
                         <i class="fa fa-pause-circle-o" aria-hidden="true"></i>
                     </button>
-                    <button id="reset" onClick={"reset"}>
+                    <button id="reset" onClick={() => 1}>
                         <i class="fa fa-refresh" aria-hidden="true"></i>
                     </button>
                 </div>
@@ -72,25 +80,27 @@ function TimeControl({
     return (
         <div className="length-control">
             <div id={titleID}>{title}</div>
-            <button
-                className="btn-level"
-                id={minID}
-                onClick={onClick}
-                value="-"
-            >
-                <i class="fa fa-arrow-circle-o-down" aria-hidden="true"></i>
-            </button>
-            <div className="btn-level" id={lengthID}>
-                {length}
+            <div className="btn-container">
+                <button
+                    className="btn-level"
+                    id={minID}
+                    onClick={onClick}
+                    value="-"
+                >
+                    <i class="fa fa-arrow-circle-o-down" aria-hidden="true"></i>
+                </button>
+                <div className="btn-level" id={lengthID}>
+                    {length}
+                </div>
+                <button
+                    className="btn-level"
+                    id={addID}
+                    onClick={onClick}
+                    value="+"
+                >
+                    <i class="fa fa-arrow-circle-o-up" aria-hidden="true"></i>
+                </button>
             </div>
-            <button
-                className="btn-level"
-                id={addID}
-                onClick={onClick}
-                value="+"
-            >
-                <i class="fa fa-arrow-circle-o-up" aria-hidden="true"></i>
-            </button>
         </div>
     );
 }
