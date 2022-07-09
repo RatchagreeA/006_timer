@@ -11,6 +11,7 @@ function App() {
     const [intervalID, setIntervalID] = useState("");
     const [audioBeep, setAudioBeep] = useState("");
 
+    // convert time to string pattern
     const timeCnv = (sec) => {
         let minutes = Math.floor(sec / 60);
         let seconds = sec % 60;
@@ -18,62 +19,27 @@ function App() {
         let secondsStr = seconds < 10 ? `0${seconds}` : `${seconds}`;
         return `${minutesStr}:${secondsStr}`;
     };
+
+    // update timer according to session lenght
     useEffect(() => {
         setTimer(seshLength * 60);
     }, [seshLength]);
 
-    const isRunning = () => {
-        return timerState === "running";
-    };
-    const reset = () => {
-        setBrkLength(5);
-        setSeshLength(25);
-        setTimerState("stopped");
-        setTimerType("Session");
-        setTimer(1500);
-        setIntervalID("");
-        audioBeep.pause();
-        audioBeep.currentTime = 0;
-    };
+    // change state start / stop
     const changeState = () => {
         if (timerState === "stopped") {
             beginCountDown();
             setTimerState("running");
         } else {
-            setTimerState("running");
+            setTimerState("stopped");
             intervalID.cancel();
         }
     };
-    const accurateInterval = (fn, time) => {
-        var cancel, nextAt, timeout, wrapper;
-        nextAt = new Date().getTime() + time;
-        timeout = null;
-        wrapper = () => {
-            nextAt += time;
-            timeout = setTimeout(wrapper, nextAt - new Date().getTime()); // delay = next_time - current_time
-            return fn();
-        };
-        cancel = () => {
-            return clearTimeout(timeout);
-        };
-        timeout = setTimeout(wrapper, nextAt - new Date().getTime());
-        console.log(nextAt);
-        return {
-            cancel: cancel,
-        };
-    };
-    const beginCountDown = () => {
-        const fcn = () => {
-            decrementTimer();
-            phaseControl();
-        };
-        setIntervalID(accurateInterval(fcn, 1000));
-    };
-    const decrementTimer = () => {
-        setTimer(timer - 1);
-    };
-    const phaseControl = () => {
-        alarm(timer);
+    // check timer for update session/break state
+    useEffect(() => {
+        if (timer === 0) {
+            audioBeep.play();
+        }
         if (timer < 0) {
             intervalID.cancel();
             if (timerType === "Session") {
@@ -84,16 +50,38 @@ function App() {
                 switchTimer(seshLength * 60, "Session");
             }
         }
+    }, [timer, brkLength, seshLength, audioBeep, intervalID, timerType]);
+    // start countdown
+    const beginCountDown = () => {
+        const fcn = () => {
+            setTimer((prevTime) => prevTime - 1);
+        };
+        setIntervalID(accurateInterval(fcn, 1000));
     };
-    const alarm = (time) => {
-        if (time === 0) {
-            audioBeep.play();
-        }
-    };
+    // update timer and type
     const switchTimer = (num, str) => {
         setTimer(num);
         setTimerType(str);
     };
+    // check running state
+    const isRunning = () => {
+        return timerState === "running";
+    };
+    // reset all
+    const reset = () => {
+        setBrkLength(5);
+        setSeshLength(25);
+        setTimerState("stopped");
+        setTimerType("Session");
+        setTimer(1500);
+        if (intervalID) {
+            intervalID.cancel();
+        }
+        setIntervalID("");
+        audioBeep.pause();
+        audioBeep.currentTime = 0;
+    };
+
     return (
         <div className="App">
             <div className="app-container">
@@ -180,7 +168,7 @@ function TimeControl({
     const onClick = (e) => {
         if (timerState !== "running") {
             if (e.currentTarget.value === "-") {
-                let trg = Math.max(0, length - 1);
+                let trg = Math.max(1, length - 1);
                 setLength(trg);
             } else {
                 let trg = Math.min(60, length + 1);
@@ -221,3 +209,20 @@ function TimeControl({
         </div>
     );
 }
+const accurateInterval = (fn, time) => {
+    var cancel, nextAt, timeout, wrapper;
+    nextAt = new Date().getTime() + time;
+    timeout = null;
+    wrapper = () => {
+        nextAt += time;
+        timeout = setTimeout(wrapper, nextAt - new Date().getTime()); // delay = next_time - current_time
+        return fn();
+    };
+    cancel = () => {
+        return clearTimeout(timeout);
+    };
+    timeout = setTimeout(wrapper, nextAt - new Date().getTime());
+    return {
+        cancel: cancel,
+    };
+};
