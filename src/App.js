@@ -1,6 +1,6 @@
 import React from "react";
 import "./App.scss";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 function App() {
     const [brkLength, setBrkLength] = useState(5);
@@ -9,6 +9,7 @@ function App() {
     const [timerType, setTimerType] = useState("Session");
     const [timer, setTimer] = useState(1500);
     const [intervalID, setIntervalID] = useState("");
+    const [audioBeep, setAudioBeep] = useState("");
 
     const timeCnv = (sec) => {
         let minutes = Math.floor(sec / 60);
@@ -16,6 +17,82 @@ function App() {
         let minutesStr = minutes < 10 ? `0${minutes}` : `${minutes}`;
         let secondsStr = seconds < 10 ? `0${seconds}` : `${seconds}`;
         return `${minutesStr}:${secondsStr}`;
+    };
+    useEffect(() => {
+        setTimer(seshLength * 60);
+    }, [seshLength]);
+
+    const isRunning = () => {
+        return timerState === "running";
+    };
+    const reset = () => {
+        setBrkLength(5);
+        setSeshLength(25);
+        setTimerState("stopped");
+        setTimerType("Session");
+        setTimer(1500);
+        setIntervalID("");
+        audioBeep.pause();
+        audioBeep.currentTime = 0;
+    };
+    const changeState = () => {
+        if (timerState === "stopped") {
+            beginCountDown();
+            setTimerState("running");
+        } else {
+            setTimerState("running");
+            intervalID.cancel();
+        }
+    };
+    const accurateInterval = (fn, time) => {
+        var cancel, nextAt, timeout, wrapper;
+        nextAt = new Date().getTime() + time;
+        timeout = null;
+        wrapper = () => {
+            nextAt += time;
+            timeout = setTimeout(wrapper, nextAt - new Date().getTime()); // delay = next_time - current_time
+            return fn();
+        };
+        cancel = () => {
+            return clearTimeout(timeout);
+        };
+        timeout = setTimeout(wrapper, nextAt - new Date().getTime());
+        console.log(nextAt);
+        return {
+            cancel: cancel,
+        };
+    };
+    const beginCountDown = () => {
+        const fcn = () => {
+            decrementTimer();
+            phaseControl();
+        };
+        setIntervalID(accurateInterval(fcn, 1000));
+    };
+    const decrementTimer = () => {
+        setTimer(timer - 1);
+    };
+    const phaseControl = () => {
+        alarm(timer);
+        if (timer < 0) {
+            intervalID.cancel();
+            if (timerType === "Session") {
+                beginCountDown();
+                switchTimer(brkLength * 60, "Break");
+            } else {
+                beginCountDown();
+                switchTimer(seshLength * 60, "Session");
+            }
+        }
+    };
+    const alarm = (time) => {
+        if (time === 0) {
+            audioBeep.play();
+        }
+    };
+    const switchTimer = (num, str) => {
+        setTimer(num);
+        setTimerType(str);
     };
     return (
         <div className="App">
@@ -29,16 +106,18 @@ function App() {
                         addID="break-increment"
                         lengthID="break-length"
                         length={brkLength}
-                        onClick={() => 1}
+                        setLength={setBrkLength}
+                        timerState={timerState}
                     />
                     <TimeControl
                         titleID="session-label"
-                        title="session Length"
+                        title="Session Length"
                         minID="session-decrement"
                         addID="session-increment"
                         lengthID="session-length"
                         length={seshLength}
-                        onClick={() => 1}
+                        setLength={setSeshLength}
+                        timerState={timerState}
                     />
                 </div>
                 <div className="timer">
@@ -48,17 +127,37 @@ function App() {
                     </div>
                 </div>
                 <div className="timer-control">
-                    <button id="start_stop" onClick={() => 1}>
-                        <i class="fa fa-play-circle-o" aria-hidden="true"></i>
-                        <i class="fa fa-pause-circle-o" aria-hidden="true"></i>
+                    <button id="start_stop" onClick={changeState}>
+                        <i
+                            className="fa fa-play-circle-o"
+                            aria-hidden="true"
+                            style={
+                                isRunning()
+                                    ? { color: "#00ff6c" }
+                                    : { color: "black" }
+                            }
+                        ></i>
+                        <span> / </span>
+                        <i
+                            className="fa fa-pause-circle-o"
+                            aria-hidden="true"
+                            style={
+                                isRunning()
+                                    ? { color: "black" }
+                                    : { color: "#00aaff" }
+                            }
+                        ></i>
                     </button>
-                    <button id="reset" onClick={() => 1}>
-                        <i class="fa fa-refresh" aria-hidden="true"></i>
+                    <button id="reset" onClick={reset}>
+                        <i className="fa fa-refresh" aria-hidden="true"></i>
                     </button>
                 </div>
                 <audio
                     id="beep"
                     preload="auto"
+                    ref={(audio) => {
+                        setAudioBeep(audio);
+                    }}
                     src="https://raw.githubusercontent.com/freeCodeCamp/cdn/master/build/testable-projects-fcc/audio/BeepSound.wav"
                 />
             </div>
@@ -75,8 +174,20 @@ function TimeControl({
     addID,
     lengthID,
     length,
-    onClick,
+    setLength,
+    timerState,
 }) {
+    const onClick = (e) => {
+        if (timerState !== "running") {
+            if (e.currentTarget.value === "-") {
+                let trg = Math.max(0, length - 1);
+                setLength(trg);
+            } else {
+                let trg = Math.min(60, length + 1);
+                setLength(trg);
+            }
+        }
+    };
     return (
         <div className="length-control">
             <div id={titleID}>{title}</div>
@@ -87,7 +198,10 @@ function TimeControl({
                     onClick={onClick}
                     value="-"
                 >
-                    <i class="fa fa-arrow-circle-o-down" aria-hidden="true"></i>
+                    <i
+                        className="fa fa-arrow-circle-o-down"
+                        aria-hidden="true"
+                    ></i>
                 </button>
                 <div className="btn-level" id={lengthID}>
                     {length}
@@ -98,7 +212,10 @@ function TimeControl({
                     onClick={onClick}
                     value="+"
                 >
-                    <i class="fa fa-arrow-circle-o-up" aria-hidden="true"></i>
+                    <i
+                        className="fa fa-arrow-circle-o-up"
+                        aria-hidden="true"
+                    ></i>
                 </button>
             </div>
         </div>
