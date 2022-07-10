@@ -51,16 +51,21 @@ function App() {
             setTimerState("running");
         } else {
             setTimerState("stopped");
-            intervalID.cancel();
+            if (intervalID) {
+                intervalID.cancel();
+            }
         }
     };
     // check timer for update session/break state
     useEffect(() => {
+        console.log(new Date().getTime() % 1000);
         if (timer === 0) {
             audioBeep.play();
         }
         if (timer < 0) {
-            intervalID.cancel();
+            if (intervalID) {
+                intervalID.cancel();
+            }
             if (timerType === "Session") {
                 beginCountDown();
                 switchTimer(brkLength * 60, "Break");
@@ -70,6 +75,20 @@ function App() {
             }
         }
     }, [timer, brkLength, seshLength, audioBeep, intervalID, timerType]);
+
+    // try useEffect to countdown
+    // useEffect(() => {
+    //     var interval = null;
+    //     if (timerState === "running") {
+    //         interval = setInterval(() => {
+    //             setTimer((prevTime) => prevTime - 1);
+    //         }, 1000);
+    //     }
+    //     return () => {
+    //         clearInterval(interval);
+    //     };
+    // }, [timerState]);
+
     // start countdown
     const beginCountDown = () => {
         const fcn = () => {
