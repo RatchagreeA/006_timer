@@ -1,6 +1,25 @@
 import React from "react";
 import "./App.scss";
 import { useState, useEffect } from "react";
+import TimeControl from "./component/TimeControl";
+
+const accurateInterval = (fn, time) => {
+    var cancel, nextAt, timeout, wrapper;
+    nextAt = new Date().getTime() + time;
+    timeout = null;
+    wrapper = () => {
+        nextAt += time;
+        timeout = setTimeout(wrapper, nextAt - new Date().getTime()); // delay = next_time - current_time
+        return fn();
+    };
+    cancel = () => {
+        return clearTimeout(timeout);
+    };
+    timeout = setTimeout(wrapper, nextAt - new Date().getTime());
+    return {
+        cancel: cancel,
+    };
+};
 
 function App() {
     const [brkLength, setBrkLength] = useState(5);
@@ -154,75 +173,3 @@ function App() {
 }
 
 export default App;
-
-function TimeControl({
-    titleID,
-    title,
-    minID,
-    addID,
-    lengthID,
-    length,
-    setLength,
-    timerState,
-}) {
-    const onClick = (e) => {
-        if (timerState !== "running") {
-            if (e.currentTarget.value === "-") {
-                let trg = Math.max(1, length - 1);
-                setLength(trg);
-            } else {
-                let trg = Math.min(60, length + 1);
-                setLength(trg);
-            }
-        }
-    };
-    return (
-        <div className="length-control">
-            <div id={titleID}>{title}</div>
-            <div className="btn-container">
-                <button
-                    className="btn-level"
-                    id={minID}
-                    onClick={onClick}
-                    value="-"
-                >
-                    <i
-                        className="fa fa-arrow-circle-o-down"
-                        aria-hidden="true"
-                    ></i>
-                </button>
-                <div className="btn-level" id={lengthID}>
-                    {length}
-                </div>
-                <button
-                    className="btn-level"
-                    id={addID}
-                    onClick={onClick}
-                    value="+"
-                >
-                    <i
-                        className="fa fa-arrow-circle-o-up"
-                        aria-hidden="true"
-                    ></i>
-                </button>
-            </div>
-        </div>
-    );
-}
-const accurateInterval = (fn, time) => {
-    var cancel, nextAt, timeout, wrapper;
-    nextAt = new Date().getTime() + time;
-    timeout = null;
-    wrapper = () => {
-        nextAt += time;
-        timeout = setTimeout(wrapper, nextAt - new Date().getTime()); // delay = next_time - current_time
-        return fn();
-    };
-    cancel = () => {
-        return clearTimeout(timeout);
-    };
-    timeout = setTimeout(wrapper, nextAt - new Date().getTime());
-    return {
-        cancel: cancel,
-    };
-};
