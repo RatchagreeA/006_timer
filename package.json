@@ -1,6 +1,6 @@
 {
-    "homepage": "https://ratchagreea.github.io/timer",
-    "name": "timer",
+    "homepage": "https://ratchagreea.github.io/006_timer",
+    "name": "006_timer",
     "version": "0.1.0",
     "private": true,
     "dependencies": {
