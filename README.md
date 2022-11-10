@@ -17,4 +17,4 @@
 1. Set the length of the break/session in minutes. 
 2. Play/Pause or Reset to default length by pressing the button.
 
-Link Demo : https://ratchagreea.github.io/006_timer
+[Link Demo Here!](https://ratchagreea.github.io/006_timer)
