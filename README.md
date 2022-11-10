@@ -1,7 +1,7 @@
 # 25 + 5 Clock
 
 ## Overview
-25 + 5 Clock is a web app that lets users set timers for activity sessions and break sessions.  
+25 + 5 Clock is a web app that lets users set alarm timers for activity sessions and break sessions.  
 (By default: activity session is 25 minutes and a break session is 5 minutes.)
 
 ## Built With
